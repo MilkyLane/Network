@@ -1,0 +1,55 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<style>
+    .post-container {
+        border: 1px solid #dee2e6;
+        padding: 10px;  /* Reduced padding */
+        margin-bottom: 20px;
+        border-radius: 5px;
+        position: relative;
+        background-color: #fff;  /* Added background color for better visibility */
+    }
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;  /* Reduced margin */
+    }
+    .post-user {
+        font-weight: bold;
+    }
+    .post-date-time {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    .post-content {
+        margin-bottom: 5px;  /* Reduced margin */
+    }
+    .post-likes {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+</style>
+
+<div class="container-fluid mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            {% for p in posts %}
+                <div class="post-container">
+                    <div class="post-header">
+                        <div class="post-user"><a href="{% url 'postingP' posting.id %}">{{ p.user.username }}</a></div>
+                        <div class="post-date-time">{{ p.created_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                    <div class="post-content">
+                        {{ p.content }}
+                    </div>
+                    <div class="post-likes">
+                        Likes: {{ p.likes_count }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

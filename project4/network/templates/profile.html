@@ -1,0 +1,180 @@
+{% extends "network/layout.html" %}
+{% load static %}
+{% block body %}
+
+<style>
+    .post-user {
+        font-weight: bold;
+        display: flex;
+        gap: 10px;
+    }
+</style>
+
+<h1 style="margin-bottom: 0px;">{{ profile_user.username }}'s Profile:</h1>
+
+<div class="post-header">
+    <div class="post-user">
+        Following: {{ following_count }} 
+        <div class="post-followers">Followers: {{ follower_count }}</div>
+    </div>
+    {% if user.id != profile_user.id %}
+    <form action="{% url 'toggle_follow' profile_user.id %}" method="post">
+        {% csrf_token %}
+        {% if profile_user in follow_users %}
+        <button class="btn btn-dark" style="border-radius: 17px">Unfollow</button>
+        {% else %}
+        <button class="btn btn-dark" style="border-radius: 17px">Follow</button>
+        {% endif %}
+    </form>
+    {% endif %}
+</div>
+
+<div class="container-fluid mt-5">
+    <h3>Posts:</h3>
+    <div class="row content-wrapper">
+        <div class="col-12 col-md-10 col-lg-8 content-column">
+            {% for p in posts %}
+                <div class="post-container" data-post-id="{{ p.id }}">
+                    <div class="post-header">
+                        <div class="post-user">{{ p.user.username }}</div>
+                        <div class="post-date-time">{{ p.created_at|date:"M d, Y H:i" }}</div>
+                    </div>
+                    <div class="post-content">{{ p.content }}</div>
+                    <textarea class="edit-area hidden">{{ p.content }}</textarea>
+                    {% if user.id == profile_user.id %}
+                    <div class="post-date-time">
+                        <button type="button" class="btn btn-outline-danger btn-sm edit-btn">Edit</button>
+                        <button type="button" class="btn btn-outline-success btn-sm save-btn hidden">Save</button>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+        {% if posts.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ posts.previous_page_number }}">Previous</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">First</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+        {% endif %}
+
+        {% for num in posts.paginator.page_range %}
+            {% if posts.number == num %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ posts.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ posts.paginator.num_pages }}">Last</a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Last</span>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.edit-btn').forEach(function(editButton) {
+            editButton.addEventListener('click', function() {
+                const postContainer = editButton.closest('.post-container');
+                const postContent = postContainer.querySelector('.post-content');
+                const editArea = postContainer.querySelector('.edit-area');
+                const saveButton = postContainer.querySelector('.save-btn');
+    
+                postContent.classList.add('hidden');
+                editArea.classList.remove('hidden');
+                editButton.classList.add('hidden');
+                saveButton.classList.remove('hidden');
+            });
+        });
+    
+        document.querySelectorAll('.save-btn').forEach(function(saveButton) {
+            saveButton.addEventListener('click', function() {
+                const postContainer = saveButton.closest('.post-container');
+                const postContent = postContainer.querySelector('.post-content');
+                const editArea = postContainer.querySelector('.edit-area');
+                const editButton = postContainer.querySelector('.edit-btn');
+    
+             
+                postContent.textContent = editArea.value;
+    
+               
+                postContent.classList.remove('hidden');
+                editArea.classList.add('hidden');
+                saveButton.classList.add('hidden');
+                editButton.classList.remove('hidden');
+    
+              
+                fetch(`/update_post/${postContainer.dataset.postId}/`, {
+                    method: 'POST',
+                    body: JSON.stringify({ content: editArea.value }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }).then(data => {
+                    if (data.success) {
+                        
+                        postContent.textContent = data.content;
+                    } else {
+                       
+                        console.error('Error:', data.error);
+                    }
+                }).catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+            });
+        });
+    
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+    </script>
+    
+{% endblock %}

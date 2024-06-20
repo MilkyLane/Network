@@ -1,0 +1,153 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+
+<div class="container mt-5">
+    {% if user.is_authenticated %}
+        <div id="new-post-container">
+            <form method="post" action="{% url 'posting' %}">
+                {% csrf_token %}
+                <div id="post">
+                    <p>New Post:</p>
+                    <textarea name="content" rows="4" cols="103"></textarea>
+                    <br>
+                    <button type="submit" class="btn btn-success" style="border-radius: 8px; width: 100px;">Post</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            <p style="font-size: 20px; font-weight: bold; margin: 0;">You are not logged in.</p>
+            <p style="margin-top: 0;">Log in to be able to make a post.</p>
+        </div>
+    {% endif %}
+    <br>
+    {% for p in posts %}
+    <div class="post-container">
+        <div class="post-header">
+            <div class="post-user"><a href="{% url 'profile' p.user.id %}">{{ p.user.username }}</a></div>
+            <div class="post-date-time">{{ p.created_at|date:"M d, Y H:i" }}</div>
+        </div>
+        <div class="post-content">
+            {{ p.content }}
+        </div>
+        <div class="post-likes">
+            Likes: <span class="likes-count">{{ p.likes.count }}</span>
+            {% if user.is_authenticated %}
+                <button class="like-button {% if user in p.likes.all %}liked{% endif %}" data-post-id="{{ p.id }}">
+                    <svg class="heart" width="24" height="24" viewBox="0 0 24 24">
+                        <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"></path>
+                    </svg>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if posts.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ posts.previous_page_number }}">Previous</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">First</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Previous</span>
+                </li>
+            {% endif %}
+
+            {% for num in posts.paginator.page_range %}
+                {% if posts.number == num %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if posts.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ posts.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ posts.paginator.num_pages }}">Last</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Next</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">Last</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.like-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                const csrftoken = getCookie('csrftoken');
+                const isLiked = this.classList.contains('liked');
+
+                fetch(`/like_post/${postId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ like: !isLiked })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const postContainer = this.closest('.post-container');
+                        if (postContainer) {
+                            const likesCount = postContainer.querySelector('.likes-count');
+                            if (likesCount) {
+                                likesCount.textContent = data.likes_count;
+                            }
+                            this.classList.toggle('liked', data.liked);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+            });
+        });
+    });
+</script>
+    
+
+{% endblock %}

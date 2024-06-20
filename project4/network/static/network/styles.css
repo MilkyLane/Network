@@ -1,0 +1,89 @@
+
+
+body{
+    background-color: rgb(250,240,230);
+}
+
+
+.post-container {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    position: relative;
+    background-color: #fff; 
+}
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+.post-user {
+    font-weight: bold;
+}
+.post-followers {
+    font-weight: bold;
+}
+.post-date-time {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+.post-content {
+    margin-bottom: 5px;
+}
+.post-likes {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+.container-fluid {
+    padding: 0 15px;
+}
+.like-button {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-left: 5px; 
+}
+.like-button .heart-icon:active{
+    width: 25px;
+    height: 25px;
+    fill: black;
+
+    transform: translateY(2px);
+}
+.like-button .heart-icon {
+    width: 20px;
+    height: 20px;
+
+    fill: red;
+}
+.container-fluid {
+    padding: 0 15px;
+}
+.content-wrapper {
+    display: flex;
+    justify-content: center;
+}
+.content-column {
+    flex: 0 0 80%;
+    max-width: 1200px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.mt-5 {
+    margin-top: 3rem !important;
+}
+h3 {
+    margin-top: 20px;
+}
+.hidden {
+    display: none;
+}
+
